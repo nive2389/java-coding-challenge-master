@@ -109,7 +109,7 @@ public class CurrencyServiceImpl implements CurrencyService {
         return dtoList;
     }
 
-    public boolean contains(String unit) {
+    private boolean contains(String unit) {
         for (Units c : Units.values()) {
             if (c.name().equals(unit)) {
                 return true;
