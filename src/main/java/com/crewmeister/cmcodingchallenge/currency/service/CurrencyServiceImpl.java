@@ -1,7 +1,8 @@
 package com.crewmeister.cmcodingchallenge.currency.service;
 
+import com.crewmeister.cmcodingchallenge.currency.constants.Constants;
 import com.crewmeister.cmcodingchallenge.currency.dao.CurrencyDAO;
-import com.crewmeister.cmcodingchallenge.currency.exception.NotFoundException;
+import com.crewmeister.cmcodingchallenge.currency.model.CurrencyConversionRates;
 import com.crewmeister.cmcodingchallenge.currency.model.CurrencyDTO;
 import com.crewmeister.cmcodingchallenge.currency.model.Units;
 import com.crewmeister.cmcodingchallenge.currency.repository.CurrencyRepository;
@@ -11,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 @Component
 @Transactional
@@ -56,12 +60,29 @@ public class CurrencyServiceImpl implements CurrencyService {
                 String formattedDate = util.getDateInString(date);
                 CurrencyDAO dao = repo.findByUnitAndDate(unit, formattedDate);
                 if (null != dao) {
-                    log.info("DAO: {}", dao.getId());
+                    log.info("fetch Currency data id: {}", dao.getId());
                     dto = convertToDTO(Collections.singletonList(dao)).get(0);
                 }
             }
 
         return dto;
+    }
+
+    @Override
+    public CurrencyConversionRates getConvertCurrency(String unit, double givenCurrency, Date date) {
+        CurrencyConversionRates ccr = new CurrencyConversionRates();
+        if (count() > 0) {
+            String formattedDate = util.getDateInString(date);
+            CurrencyDAO dao = repo.findByUnitAndDate(unit, formattedDate);
+            ccr.setDate(formattedDate);
+            ccr.setUnit("EUR");
+            if (null != dao) {
+                log.info("Currency value for given unit and date: {}", dao.getCurrencyValue());
+                double convertedCurrency = givenCurrency * dao.getCurrencyValue();
+                ccr.setConversionRate(convertedCurrency);
+            }
+        }
+        return ccr;
     }
 
     @Override
@@ -80,7 +101,7 @@ public class CurrencyServiceImpl implements CurrencyService {
                 dto.setDate(x.getDate());
                 dto.setUnit(x.getUnit());
                 dto.setTimeSeries(contains(x.getUnit()) ?
-                        Units.valueOf(x.getUnit()).getTimeAsString(): "TIMESERIES NOT AVAILABEL");
+                        Units.valueOf(x.getUnit()).getTimeAsString(): Constants.TIMESERIES_NOT_AVAILABEL);
                  dtoList.add(dto);
             });
 

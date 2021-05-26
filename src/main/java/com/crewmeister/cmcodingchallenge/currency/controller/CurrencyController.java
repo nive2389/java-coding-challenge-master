@@ -1,6 +1,8 @@
 package com.crewmeister.cmcodingchallenge.currency.controller;
 
+import com.crewmeister.cmcodingchallenge.currency.constants.Constants;
 import com.crewmeister.cmcodingchallenge.currency.exception.NotFoundException;
+import com.crewmeister.cmcodingchallenge.currency.model.CurrencyConversionRates;
 import com.crewmeister.cmcodingchallenge.currency.model.CurrencyDTO;
 import com.crewmeister.cmcodingchallenge.currency.service.CurrencyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
@@ -29,7 +28,7 @@ public class CurrencyController {
     public ResponseEntity<?> getCurrencies() {
         List<String> list = currencyService.getUnits();
         if(list.isEmpty()) {
-            return new ResponseEntity<>("NO DATA AVAILABLE", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(Constants.NO_DATA_AVAILABEL, HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
@@ -38,7 +37,7 @@ public class CurrencyController {
     public ResponseEntity<?> getAllCurrencies() throws Exception {
         List<CurrencyDTO> list = currencyService.getAll();
         if(list.isEmpty()) {
-            throw new NotFoundException("NO DATA AVAILABLE");
+            throw new NotFoundException(Constants.NO_DATA_AVAILABEL);
         }
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
@@ -47,11 +46,11 @@ public class CurrencyController {
     public ResponseEntity<?> getCurrenciesByDate(@PathVariable @DateTimeFormat(pattern="dd-MM-yyyy") Date date) throws Exception {
         List<CurrencyDTO> list;
         if(currencyService.count() <= 0) {
-            throw new Exception("Something went wrong. Please try again later.");
+            throw new Exception(Constants.SOMETHING_WRONG);
         } else {
             list = currencyService.getByDate(date);
             if (list.isEmpty()) {
-                throw new NotFoundException("Ensure the given date should not be a weekend");
+                throw new NotFoundException(Constants.INVALID_INPUT);
             }
         }
         return new ResponseEntity<>(list, HttpStatus.OK);
@@ -59,14 +58,26 @@ public class CurrencyController {
 
     @GetMapping("/{unit}/{date}")
     public ResponseEntity<?> getCurrencyByDateAndType(@PathVariable String unit, @PathVariable @DateTimeFormat(pattern="dd-MM-yyyy") Date date) throws Exception {
+        CurrencyDTO dto;
         if(currencyService.count() <= 0) {
-            throw new Exception("Something went wrong. Please try again later.");
+            throw new Exception(Constants.SOMETHING_WRONG);
         } else {
-            CurrencyDTO dto = currencyService.getByUnitAndDate(unit.toUpperCase(), date);
+            dto = currencyService.getByUnitAndDate(unit.toUpperCase(), date);
             if (null == dto.getUnit()) {
-                throw new NotFoundException("Ensure the given date should not be a weekend");
+                throw new NotFoundException(Constants.INVALID_INPUT);
             }
         }
-        return new ResponseEntity<>(currencyService.getByUnitAndDate(unit,date), HttpStatus.OK);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
+    }
+
+    @GetMapping("/convertCurrency")
+    public ResponseEntity<?> getCurrencyConversion(@RequestParam String unit, @RequestParam double givenCurrency, @RequestParam @DateTimeFormat(pattern="dd-MM-yyyy") Date date) throws Exception {
+        CurrencyConversionRates ccr;
+        if(currencyService.count() <= 0) {
+            throw new Exception(Constants.SOMETHING_WRONG);
+        } else {
+             ccr = currencyService.getConvertCurrency(unit,givenCurrency,date);
+        }
+        return new ResponseEntity<>(ccr, HttpStatus.ACCEPTED);
     }
 }

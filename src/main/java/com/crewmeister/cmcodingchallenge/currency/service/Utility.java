@@ -28,9 +28,7 @@ public class Utility {
     @Autowired
     private CurrencyRepository repo;
 
-    final String restApiConsume1 = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml";// 90 days
-    final String restApiConsume = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"; // all
-
+    final String restApiConsume = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml";
 
     public List<Cubes> retrieve(JSONObject jsonObject) throws IOException {
         Map<String, Object> map = new HashMap<>();
@@ -73,7 +71,6 @@ public class Utility {
             }
         } catch (ResourceAccessException rae) {
             log.info("Network Error: {}", rae.getMessage());
-            //collectData();
         } catch (JSONException e) {
             log.error("JSON parsing exception: {}",e.getMessage());
         } catch (Exception e) {

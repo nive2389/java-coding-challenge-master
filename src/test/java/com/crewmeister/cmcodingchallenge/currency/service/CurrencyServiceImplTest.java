@@ -1,6 +1,7 @@
 package com.crewmeister.cmcodingchallenge.currency.service;
 
 import com.crewmeister.cmcodingchallenge.currency.dao.CurrencyDAO;
+import com.crewmeister.cmcodingchallenge.currency.model.CurrencyConversionRates;
 import com.crewmeister.cmcodingchallenge.currency.model.CurrencyDTO;
 import com.crewmeister.cmcodingchallenge.currency.repository.CurrencyRepository;
 
@@ -42,15 +43,21 @@ class CurrencyServiceImplTest {
 
     List<CurrencyDAO> mockdao = new ArrayList<>();
 
+    Date date;
+
+    CurrencyServiceImplTest() throws ParseException {
+        date = new SimpleDateFormat("dd-MM-yyyy").parse("10-05-2021");
+    }
+
     @BeforeEach
     public void setup() {
         CurrencyDAO dao = new CurrencyDAO();
         dao.setId(1L);
         dao.setDate("2021-05-10");
-        dao.setCurrencyValue(1.002);
+        dao.setCurrencyValue(1.0);
         dao.setUnit("INR");
         mockdao.add(dao);
-
+        Mockito.when(mockUtil.getDateInString(Mockito.any())).thenReturn("2021-05-10");
     }
 
     @Test
@@ -81,7 +88,6 @@ class CurrencyServiceImplTest {
         dao.setCurrencyValue(1.002);
         dao.setUnit("GGG");
         mockdao.add(dao);
-
         Mockito.when(mockRepo.findAll()).thenReturn(mockdao);
         List<CurrencyDTO> list = mock.getAll();
         assertEquals(list.size(), 2);
@@ -94,13 +100,10 @@ class CurrencyServiceImplTest {
         Mockito.when(mockRepo.findAll()).thenReturn(new ArrayList<CurrencyDAO>());
         List<CurrencyDTO> list = mock.getAll();
         assertTrue(list.isEmpty());
-
     }
 
     @Test
     void getByDateTest() throws Exception {
-        Date date = new SimpleDateFormat("dd-MM-yyyy").parse("10-05-2021");
-        Mockito.when(mockUtil.getDateInString(Mockito.any())).thenReturn("2021-05-10");
         Mockito.when(mockRepo.count()).thenReturn(1L);
         Mockito.when(mockRepo.findAllByDate(Mockito.anyString())).thenReturn(mockdao);
         List<CurrencyDTO> result = mock.getByDate(date);
@@ -110,8 +113,6 @@ class CurrencyServiceImplTest {
 
     @Test
     void getByDateCountZeroTest() throws Exception {
-        Date date = new SimpleDateFormat("dd-MM-yyyy").parse("10-05-2021");
-        Mockito.when(mockUtil.getDateInString(Mockito.any())).thenReturn("2021-05-10");
         Mockito.when(mockRepo.count()).thenReturn(0L);
         //Mockito.when(mockRepo.findAllByDate(Mockito.anyString())).thenReturn(mockdao);
         List<CurrencyDTO> result = mock.getByDate(date);
@@ -126,8 +127,6 @@ class CurrencyServiceImplTest {
         dao.setDate("2021-05-10");
         dao.setCurrencyValue(1.002);
         dao.setUnit("INR");
-        Date date = new SimpleDateFormat("dd-MM-yyyy").parse("10-05-2021");
-        Mockito.when(mockUtil.getDateInString(Mockito.any())).thenReturn("2021-05-10");
         Mockito.when(mockRepo.count()).thenReturn(1L);
         Mockito.when(mockRepo.findByUnitAndDate(Mockito.anyString(), Mockito.anyString())).thenReturn(dao);
         CurrencyDTO result = mock.getByUnitAndDate("INR", date);
@@ -136,14 +135,37 @@ class CurrencyServiceImplTest {
 
     @Test
     void getByUnitAndDateNullTest() throws Exception {
-
-        Date date = new SimpleDateFormat("dd-MM-yyyy").parse("10-05-2021");
-        Mockito.when(mockUtil.getDateInString(Mockito.any())).thenReturn("2021-05-10");
         Mockito.when(mockRepo.count()).thenReturn(1L);
         Mockito.when(mockRepo.findByUnitAndDate(Mockito.anyString(), Mockito.anyString())).thenReturn(null);
         CurrencyDTO result = mock.getByUnitAndDate("INR", date);
         assertEquals(result.getDate(), null);
     }
 
+    @Test
+    public void getConvertCurrencyTest() throws Exception {
+        CurrencyDAO dao = new CurrencyDAO();
+        dao.setId(1L);
+        dao.setDate("2021-05-10");
+        dao.setCurrencyValue(1.0);
+        dao.setUnit("INR");
+        Mockito.when(mockRepo.count()).thenReturn(1L);
+        Mockito.when(mockRepo.findByUnitAndDate(Mockito.anyString(), Mockito.anyString())).thenReturn(dao);
+        CurrencyConversionRates result = mock.getConvertCurrency("INR", 10.0, date);
+        assertEquals(result.getUnit(), "EUR");
+        assertEquals(result.getConversionRate(), 10.0);
+    }
 
+    @Test
+    public void getConvertCurrencyNullTest() throws Exception {
+        CurrencyDAO dao = new CurrencyDAO();
+        dao.setId(1L);
+        dao.setDate("2021-05-10");
+        dao.setCurrencyValue(1.0);
+        dao.setUnit("INR");
+        Mockito.when(mockRepo.count()).thenReturn(1L);
+        Mockito.when(mockRepo.findByUnitAndDate(Mockito.anyString(), Mockito.anyString())).thenReturn(null);
+        CurrencyConversionRates result = mock.getConvertCurrency("INR", 10.0, date);
+        assertEquals(result.getUnit(), "EUR");
+        assertEquals(result.getConversionRate(), 0.0);
+    }
 }
